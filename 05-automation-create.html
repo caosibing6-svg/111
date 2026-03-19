@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新建自动化任务 - LegendClaw v9</title>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #EEF2FF;
+      --primary-hover: #4338CA;
+      --accent: #6366F1;
+      --accent-light: #C7D2FE;
+      --bg: #F8FAFC;
+      --bg-secondary: #F1F5F9;
+      --card-bg: #FFFFFF;
+      --sidebar-bg: #FFFFFF;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --sidebar-w: 260px;
+      --transition: 0.2s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .icon { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2;
+      stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+    }
+    .sidebar.collapsed { width: 0; overflow: hidden; }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .sidebar-logo .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; font-weight: 800;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .sidebar-logo .logo-text {
+      font-size: 18px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-nav { flex:1; padding: 16px 12px; overflow-y: auto; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 14px; font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+    .nav-item:hover {
+      background: var(--bg-secondary);
+      color: var(--primary);
+    }
+    .nav-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-item .icon { width:18px; height:18px; }
+    .nav-item .nav-badge {
+      margin-left: auto;
+      background: var(--primary);
+      color: white; font-size: 11px; padding: 2px 8px;
+      border-radius: 12px; font-weight: 700;
+    }
+
+    .sidebar-user {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-light);
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-secondary);
+    }
+    .user-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #64748B, #94A3B8);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; font-weight: 700;
+    }
+    .user-info { flex:1; }
+    .user-name { font-size:14px; font-weight:600; color:var(--text-primary); }
+    .user-role { font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+    .main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+    .main-header {
+      height: 64px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-xs);
+    }
+    .header-left { display:flex; align-items:center; gap:12px; }
+
+    .collapse-btn {
+      width:34px; height:34px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+      transition: all var(--transition);
+    }
+    .collapse-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--accent-light);
+    }
+
+    .header-title { font-size:16px; font-weight:700; color:var(--text-primary); }
+    .header-right { display:flex; align-items:center; gap:10px; }
+
+    .search-box { position:relative; width:280px; }
+    .search-box input {
+      width:100%; height:36px;
+      padding: 0 14px 0 38px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: all var(--transition);
+    }
+    .search-box input:focus {
+      outline:none; border-color:var(--primary);
+      background:white; box-shadow: var(--shadow-glow);
+    }
+    .search-box input::placeholder { color:var(--text-muted); }
+    .search-box .search-icon {
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); width:16px; height:16px;
+    }
+
+    .header-btn {
+      width:36px; height:36px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+      transition: all var(--transition);
+    }
+    .header-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--accent-light);
+    }
+
+    .page { flex:1; overflow:hidden; display:none; }
+    .page.active { display:flex; flex-direction:column; }
+
+    .automations-page { padding:32px; overflow-y:auto; display:flex; flex-direction:column; height:100%; background:var(--bg); }
+
+    .modal-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(15, 23, 42, 0.5);
+      backdrop-filter:blur(8px);
+      display:none; align-items:center; justify-content:center; z-index:1000;
+    }
+    .modal-overlay.active { display:flex; }
+
+    .modal {
+      background:white; border-radius:var(--radius-xl);
+      width:560px; max-height:85vh; overflow:hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform:scale(0.92) translateY(15px); }
+      to { opacity:1; transform:scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding:24px; border-bottom: 1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      background: var(--bg);
+    }
+    .modal-title { font-size:17px; font-weight:700; color:var(--text-primary); }
+    .modal-close {
+      width:32px; height:32px;
+      border: 1px solid var(--border); background:white;
+      border-radius:var(--radius-sm); cursor:pointer;
+      color:var(--text-muted); transition:all var(--transition);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .modal-close:hover { background:var(--primary-light); border-color:var(--accent-light); color:var(--primary); }
+
+    .modal-body { padding:24px; overflow-y:auto; max-height:calc(85vh - 140px); }
+    .modal-footer {
+      padding:20px 24px; border-top: 1px solid var(--border);
+      display:flex; justify-content:flex-end; gap:12px;
+      background: var(--bg);
+    }
+
+    .modal-btn {
+      padding:10px 22px; border: 1px solid var(--border);
+      background:white; border-radius:var(--radius-sm);
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:all var(--transition); color:var(--text-secondary);
+    }
+    .modal-btn:hover { background:var(--bg); border-color:var(--accent-light); color:var(--primary); }
+    .modal-btn.primary {
+      background:linear-gradient(135deg,#4F46E5,#6366F1);
+      color:white; border-color:transparent;
+      box-shadow:0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .modal-btn.primary:hover { box-shadow:0 6px 16px rgba(79, 70, 229, 0.4); transform:translateY(-1px); }
+
+    .form-group { margin-bottom:20px; }
+    .form-label { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:8px; display:block; }
+    .form-input, .form-select, .form-textarea {
+      width:100%; padding:12px 16px;
+      border: 2px solid var(--border); border-radius:var(--radius-sm);
+      font-size:14px; transition:all var(--transition);
+      color:var(--text-primary); background:white;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline:none; border-color:var(--primary); box-shadow:var(--shadow-glow);
+    }
+    .form-textarea { min-height:100px; resize:vertical; }
+
+    .freq-type-tabs { display:flex; gap:0; margin-bottom:20px; border-bottom: 2px solid var(--border); }
+    .freq-type-tab {
+      padding:12px 20px; border:none; background:transparent;
+      border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+      font-size:14px; cursor:pointer; color:var(--text-secondary); transition:all var(--transition); font-weight:500; border-bottom:2px solid transparent; margin-bottom:-2px;
+    }
+    .freq-type-tab:hover { background:var(--bg); }
+    .freq-type-tab.active { color:var(--primary); border-bottom-color:var(--primary); background:var(--primary-light); }
+
+    .day-selector { display:flex; gap:10px; flex-wrap:wrap; }
+    .day-check { display:none; }
+    .day-label {
+      padding:8px 18px; border: 2px solid var(--border);
+      border-radius:20px; font-size:14px; cursor:pointer;
+      transition:all var(--transition); color:var(--text-secondary); font-weight:500;
+    }
+    .day-check:checked + .day-label {
+      background:linear-gradient(135deg,#4F46E5,#6366F1);
+      color:white; border-color:transparent;
+      box-shadow:0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+    .time-picker { display:flex; gap:12px; align-items:center; }
+    .time-picker .form-input { width:90px; }
+
+    .toast-container { position:fixed; top:24px; right:24px; z-index:2000; }
+    .toast {
+      padding:14px 20px; background:white;
+      border-radius:var(--radius-md); box-shadow:var(--shadow-lg);
+      margin-bottom:12px; display:flex; align-items:center; gap:12px;
+      font-size:14px; font-weight:500;
+      animation: slideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      border: 1px solid var(--border); border-left: 4px solid var(--primary);
+    }
+    @keyframes slideIn {
+      from { transform:translateX(120%); opacity:0; }
+      to { transform:translateX(0); opacity:1; }
+    }
+
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:#94A3B8; }
+  </style>
+</head>
+<body>
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">LC</div>
+      <div class="logo-text">LegendClaw</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" data-page="new-chat">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>创建新对话</span>
+      </div>
+      <div class="nav-item" data-page="history">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/></svg>
+        <span>历史记录</span>
+      </div>
+      <div class="nav-item" data-page="skills">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>技能广场</span>
+      </div>
+      <div class="nav-item active" data-page="automations">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>自动化任务</span>
+        <span class="nav-badge">3</span>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">U</div>
+      <div class="user-info">
+        <div class="user-name">User</div>
+        <div class="user-role">Free Plan</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <!-- 头部 -->
+    <header class="main-header">
+      <div class="header-left">
+        <button class="collapse-btn" onclick="toggleSidebar()" title="收起侧边栏">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="header-title">新建自动化任务</div>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="搜索..." />
+        </div>
+        <button class="header-btn" title="通知">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <button class="header-btn" title="设置">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 页面内容 -->
+    <div class="page active" id="page-automations">
+      <div class="automations-page"></div>
+    </div>
+  </main>
+
+  <!-- 新建任务模态框 -->
+  <div class="modal-overlay active" id="taskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新建自动化任务</div>
+        <button class="modal-close" onclick="closeModal()">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">任务名称</label>
+          <input type="text" class="form-input" id="taskName" placeholder="输入任务名称" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">任务描述</label>
+          <textarea class="form-textarea" id="taskDesc" placeholder="描述任务内容..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">执行频率</label>
+          <div class="freq-type-tabs">
+            <button class="freq-type-tab active" data-type="daily" onclick="switchFreqType('daily')">按天</button>
+            <button class="freq-type-tab" data-type="hourly" onclick="switchFreqType('hourly')">按时</button>
+          </div>
+          <div id="freqDaily">
+            <div class="form-group">
+              <label class="form-label">选择日期</label>
+              <div class="day-selector">
+                <input type="checkbox" class="day-check" id="day-1" value="1"/><label class="day-label" for="day-1">周一</label>
+                <input type="checkbox" class="day-check" id="day-2" value="2"/><label class="day-label" for="day-2">周二</label>
+                <input type="checkbox" class="day-check" id="day-3" value="3"/><label class="day-label" for="day-3">周三</label>
+                <input type="checkbox" class="day-check" id="day-4" value="4"/><label class="day-label" for="day-4">周四</label>
+                <input type="checkbox" class="day-check" id="day-5" value="5"/><label class="day-label" for="day-5">周五</label>
+                <input type="checkbox" class="day-check" id="day-6" value="6"/><label class="day-label" for="day-6">周六</label>
+                <input type="checkbox" class="day-check" id="day-7" value="7"/><label class="day-label" for="day-7">周日</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">执行时间</label>
+              <div class="time-picker">
+                <input type="number" class="form-input" id="taskHour" min="0" max="23" placeholder="时" />
+                <span>:</span>
+                <input type="number" class="form-input" id="taskMinute" min="0" max="59" placeholder="分" />
+              </div>
+            </div>
+          </div>
+          <div id="freqHourly" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">间隔小时数</label>
+              <input type="number" class="form-input" id="taskInterval" min="1" placeholder="例如：2" />
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">任务状态</label>
+          <select class="form-select" id="taskStatus">
+            <option value="active">运行中</option>
+            <option value="paused">已暂停</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal()">取消</button>
+        <button class="modal-btn primary" onclick="saveTask()">保存任务</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+    function switchFreqType(type) {
+      document.querySelectorAll('.freq-type-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelector(`.freq-type-tab[data-type="${type}"]`).classList.add('active');
+      document.getElementById('freqDaily').style.display=type==='daily'?'block':'none';
+      document.getElementById('freqHourly').style.display=type==='hourly'?'block':'none';
+    }
+
+    function closeModal() { document.getElementById('taskModal').classList.remove('active'); }
+
+    function saveTask() {
+      const name=document.getElementById('taskName').value.trim();
+      const desc=document.getElementById('taskDesc').value.trim();
+      if (!name||!desc) { showToast('请填写任务名称和描述','error'); return; }
+      showToast('任务创建成功','success');
+      closeModal();
+    }
+
+    function showToast(message, type='info') {
+      const container=document.getElementById('toastContainer');
+      const toast=document.createElement('div');
+      toast.className='toast';
+      toast.style.borderLeftColor=type==='error'?'#EF4444':type==='success'?'#10B981':'#6366F1';
+      const icon=type==='success'?'✓':type==='error'?'✕':'ℹ';
+      toast.innerHTML=`<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(()=>toast.remove(),3000);
+    }
+  </script>
+</body>
+</html>
