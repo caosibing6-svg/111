@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>技能详情 - WorkBuddy</title>
+  <style>
+    /* ===== CSS 变量 & Reset ===== */
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #EEF2FF;
+      --primary-hover: #4338CA;
+      --primary-subtle: #E0E7FF;
+      --accent: #6366F1;
+      --accent-light: #C7D2FE;
+
+      --bg: #F8FAFC;
+      --bg-secondary: #F1F5F9;
+      --card-bg: #FFFFFF;
+
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+
+      --transition: 0.2s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ===== 图标 ===== */
+    .icon { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2;
+      stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+    /* ===== 模态框 ===== */
+    .modal-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(15, 23, 42, 0.5);
+      backdrop-filter:blur(8px);
+      display:flex; align-items:center; justify-content:center; z-index:1000;
+    }
+
+    .modal {
+      background:white; border-radius:var(--radius-xl);
+      width:680px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform:scale(0.92) translateY(15px); }
+      to { opacity:1; transform:scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding:24px 28px; border-bottom: 1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      background: var(--bg);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+    .modal-title { font-size:18px; font-weight:700; color:var(--text-primary); }
+    .modal-close {
+      width:34px; height:34px;
+      border: 1px solid var(--border); background:white;
+      border-radius:var(--radius-sm); cursor:pointer;
+      color:var(--text-muted); transition:all var(--transition);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .modal-close:hover { background:var(--primary-light); border-color:var(--accent-light); color:var(--primary); }
+
+    .modal-body { padding:28px; overflow-y:auto; max-height:60vh; }
+    .modal-footer {
+      padding:20px 28px; border-top: 1px solid var(--border);
+      display:flex; justify-content:flex-end; gap:12px;
+      background: var(--bg);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+
+    .modal-btn {
+      padding:11px 24px; border: 1px solid var(--border);
+      background:white; border-radius:var(--radius-sm);
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:all var(--transition); color:var(--text-secondary);
+    }
+    .modal-btn:hover { background:var(--bg); border-color:var(--accent-light); color:var(--primary); }
+    .modal-btn.primary {
+      background:linear-gradient(135deg,#4F46E5,#6366F1);
+      color:white; border-color:transparent;
+      box-shadow:0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .modal-btn.primary:hover { box-shadow:0 6px 16px rgba(79, 70, 229, 0.4); transform:translateY(-1px); }
+
+    /* ===== 技能头部 ===== */
+    .skill-header-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .skill-icon-large {
+      width: 72px; height: 72px;
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      box-shadow: var(--shadow-md);
+      flex-shrink: 0;
+    }
+
+    .skill-main-info { flex: 1; }
+    .skill-name-large {
+      font-size: 22px; font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .skill-desc-large {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .skill-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .skill-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+    .skill-meta-item svg { width: 14px; height: 14px; }
+
+    /* ===== 技能标签 ===== */
+    .section-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+    }
+
+    .skill-tags-container {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .skill-tag {
+      padding: 7px 14px;
+      background: var(--primary-light);
+      border: 1px solid var(--accent-light);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* ===== 技能说明 ===== */
+    .skill-description {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .skill-description p { margin-bottom: 12px; }
+    .skill-description p:last-child { margin-bottom: 0; }
+
+    /* ===== 适用场景 ===== */
+    .scenario-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .scenario-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: all var(--transition);
+    }
+    .scenario-item:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent-light);
+    }
+    .scenario-icon {
+      width: 32px; height: 32px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .scenario-content { flex: 1; }
+    .scenario-title {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .scenario-desc {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ===== 技能配置项 ===== */
+    .config-section {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .config-item:last-child { border-bottom: none; }
+    .config-label {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-primary);
+    }
+    .config-desc {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .config-toggle {
+      width: 48px; height: 26px;
+      background: #CBD5E1;
+      border-radius: 13px;
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .config-toggle.active {
+      background: linear-gradient(135deg, #4F46E5, #6366F1);
+    }
+    .config-toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px; height: 22px;
+      background: white;
+      border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .config-toggle.active::after { left: 24px; }
+
+    .config-select-wrapper {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .config-select {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      background: white;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .config-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-glow);
+    }
+
+    /* ===== 开发者信息 ===== */
+    .dev-info {
+      background: var(--bg);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .dev-info strong { color: var(--text-primary); }
+
+    /* ===== 滚动条 ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:#94A3B8; }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">技能详情</div>
+        <button class="modal-close" onclick="closeModal()">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- 技能头部 -->
+        <div class="skill-header-section">
+          <div class="skill-icon-large" style="background: #3B82F6; color: white;">
+            🔍
+          </div>
+          <div class="skill-main-info">
+            <div class="skill-name-large">代码分析</div>
+            <div class="skill-desc-large">智能分析代码结构、识别潜在问题、提供优化建议</div>
+            <div class="skill-meta">
+              <div class="skill-meta-item">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span>v2.1.0</span>
+              </div>
+              <div class="skill-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span>用户级</span>
+              </div>
+              <div class="skill-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/></svg>
+                <span>5.2k 安装</span>
+              </div>
+              <div class="skill-meta-item" style="background: #DCFCE7; color: #15803D;">
+                <svg viewBox="0 0 24 24" style="fill: none; stroke: #15803D;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span>已安装</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 技能标签 -->
+        <div class="section-title">技能标签</div>
+        <div class="skill-tags-container">
+          <span class="skill-tag">代码</span>
+          <span class="skill-tag">开发</span>
+          <span class="skill-tag">质量分析</span>
+          <span class="skill-tag">优化建议</span>
+        </div>
+
+        <!-- 功能说明 -->
+        <div class="section-title">功能说明</div>
+        <div class="skill-description">
+          <p><strong>代码分析技能</strong>是 WorkBuddy 的核心开发辅助工具，能够智能识别代码结构、分析代码质量、发现潜在问题，并提供专业的优化建议。</p>
+          <p>该技能支持多种编程语言，包括 JavaScript、Python、Java、TypeScript、Go、Rust 等，能够适应不同的代码风格和项目架构。</p>
+          <p>主要功能包括：代码结构分析、依赖关系识别、性能瓶颈检测、安全漏洞扫描、代码规范检查等。</p>
+        </div>
+
+        <!-- 适用场景 -->
+        <div class="section-title">适用场景</div>
+        <div class="scenario-list">
+          <div class="scenario-item">
+            <div class="scenario-icon">📊</div>
+            <div class="scenario-content">
+              <div class="scenario-title">代码审查</div>
+              <div class="scenario-desc">在代码提交前进行全面审查，发现潜在问题和不规范之处</div>
+            </div>
+          </div>
+          <div class="scenario-item">
+            <div class="scenario-icon">🔧</div>
+            <div class="scenario-content">
+              <div class="scenario-title">性能优化</div>
+              <div class="scenario-desc">分析代码性能瓶颈，提供具体的优化建议和改进方案</div>
+            </div>
+          </div>
+          <div class="scenario-item">
+            <div class="scenario-icon">🔒</div>
+            <div class="scenario-content">
+              <div class="scenario-title">安全审计</div>
+              <div class="scenario-desc">检测代码中的安全漏洞和潜在风险，提供修复方案</div>
+            </div>
+          </div>
+          <div class="scenario-item">
+            <div class="scenario-icon">📚</div>
+            <div class="scenario-content">
+              <div class="scenario-title">代码文档生成</div>
+              <div class="scenario-desc">自动分析代码结构，生成完整的技术文档和 API 说明</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 技能配置 -->
+        <div class="section-title">技能配置</div>
+        <div class="config-section">
+          <div class="config-item">
+            <div>
+              <div class="config-label">自动启用</div>
+              <div class="config-desc">检测到代码相关请求时自动触发</div>
+            </div>
+            <div class="config-toggle active" onclick="this.classList.toggle('active')"></div>
+          </div>
+          <div class="config-item">
+            <div>
+              <div class="config-label">深度分析</div>
+              <div class="config-desc">启用更全面的代码深度分析（可能耗时更长）</div>
+            </div>
+            <div class="config-toggle" onclick="this.classList.toggle('active')"></div>
+          </div>
+          <div class="config-item">
+            <div>
+              <div class="config-label">分析语言</div>
+              <div class="config-desc">选择主要分析的编程语言</div>
+            </div>
+            <div class="config-select-wrapper">
+              <select class="config-select">
+                <option>自动检测</option>
+                <option>JavaScript/TypeScript</option>
+                <option>Python</option>
+                <option>Java</option>
+                <option>Go</option>
+                <option>Rust</option>
+              </select>
+            </div>
+          </div>
+          <div class="config-item">
+            <div>
+              <div class="config-label">详细报告</div>
+              <div class="config-desc">生成详细的分析报告和建议</div>
+            </div>
+            <div class="config-toggle active" onclick="this.classList.toggle('active')"></div>
+          </div>
+        </div>
+
+        <!-- 开发者信息 -->
+        <div class="section-title">开发者信息</div>
+        <div class="dev-info">
+          <strong>开发者：</strong> WorkBuddy Team<br>
+          <strong>更新时间：</strong> 2026-03-15<br>
+          <strong>许可证：</strong> MIT<br>
+          <strong>仓库地址：</strong> https://github.com/workbuddy/skills/code-analysis
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="showToast('卸载功能开发中', 'info')">卸载技能</button>
+        <button class="modal-btn primary" onclick="showToast('配置已保存', 'success')">保存配置</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function closeModal() {
+      document.querySelector('.modal-overlay').style.opacity = '0';
+      setTimeout(() => {
+        alert('关闭模态框');
+      }, 300);
+    }
+
+    function showToast(message, type) {
+      alert(`${type}: ${message}`);
+    }
+  </script>
+</body>
+</html>
